@@ -293,4 +293,139 @@ shared_examples 'stub_env tests' do
       end
     end
   end
+
+  describe 'keys' do
+    context 'with a single stubbed variable' do
+      let(:value) { 'success' }
+      before :each do
+        stub_env('TEST', value)
+      end
+
+      it 'includes the stubbed key in the list of keys' do
+        expect(ENV.keys).to include('TEST')
+      end
+
+      it 'includes original environment variable keys in the list of keys' do
+        expect(ENV.keys).to include('UNSTUBBED')
+      end
+
+      context 'when stubbed with an empty string' do
+        let(:value) { '' }
+        it 'includes the stubbed key in the list of keys' do
+          expect(ENV.keys).to include('TEST')
+        end
+      end
+
+      context 'when stubbed with nil' do
+        let(:value) { nil }
+        it 'does not include the stubbed key in the list of keys' do
+          expect(ENV.keys).not_to include('TEST')
+        end
+      end
+    end
+
+    context 'with multiple stubbed variables' do
+      before :each do
+        stub_env('TEST', 'success')
+        stub_env('TEST2', 'another success')
+        stub_env('TEST_EMPTY_STRING', '')
+        stub_env('TEST_NIL', nil)
+      end
+
+      it 'includes the first variable name in the list of keys' do
+        expect(ENV.keys).to include('TEST')
+      end
+
+      it 'includes the second variable name in the list of keys' do
+        expect(ENV.keys).to include('TEST2')
+      end
+
+      it 'includes a variable with an empty string in the list of keys' do
+        expect(ENV.keys).to include('TEST_EMPTY_STRING')
+      end
+
+      it 'does not include variables with a nil value in the list of keys' do
+        expect(ENV.keys).not_to include('TEST_NIL')
+      end
+
+      it 'includes original environment variables in the list of keys' do
+        expect(ENV.keys).to include('UNSTUBBED')
+      end
+
+      it 'does not include keys that are not in the environment' do
+        expect(ENV.keys).not_to include('DOES_NOT_EXIST')
+      end
+    end
+
+    context 'with multiple stubbed variables in a hash' do
+      before :each do
+        stub_env({'TEST' => 'success', 'TEST2' => 'another success'})
+      end
+
+      it 'includes the first variable name in the list of keys' do
+        expect(ENV.keys).to include('TEST')
+      end
+
+      it 'includes the second variable name in the list of keys' do
+        expect(ENV.keys).to include('TEST2')
+      end
+
+      it 'includes original environment variables in the list of keys' do
+        expect(ENV.keys).to include('UNSTUBBED')
+      end
+
+      it 'does not include keys that are not in the environment' do
+        expect(ENV.keys).not_to include('DOES_NOT_EXIST')
+      end
+    end
+
+    context 'with existing environment variables' do
+      before :each do
+        ENV['TO_OVERWRITE'] = 'to overwrite'
+      end
+
+      it 'has the existing key in the list of keys' do
+        expect(ENV.keys).to include('TO_OVERWRITE')
+      end
+
+      it 'does not have a non-existent key in the list of keys' do
+        expect(ENV.keys).not_to include('DOES_NOT_EXIST')
+      end
+
+      context 'stubbing an existing key with a value' do
+        before do
+          stub_env('TO_OVERWRITE', 'overwritten')
+        end
+
+        it 'has the existing key in the list of keys' do
+          expect(ENV.keys).to include('TO_OVERWRITE')
+        end
+
+        it 'only has one instance of the existing key in the list of keys' do
+          matching_keys = ENV.keys.select { |k| k == 'TO_OVERWRITE' }
+          expect(matching_keys.length).to eq(1)
+        end
+      end
+
+      context 'stubbing an existing key with nil' do
+        before :each do
+          stub_env('TO_OVERWRITE', nil)
+        end
+
+        it 'does not have the key in the list of keys' do
+          expect(ENV.keys).not_to include('TO_OVERWRITE')
+        end
+      end
+
+      context 'stubbing an existing key with an empty string' do
+        before :each do
+          stub_env('TO_OVERWRITE', '')
+        end
+
+        it 'returns true' do
+          expect(ENV.key?('TO_OVERWRITE')).to be(true)
+        end
+      end
+    end
+  end
 end
