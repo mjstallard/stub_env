@@ -19,6 +19,7 @@ module StubEnv
       allow(ENV).to receive(:fetch).with(key, anything()) do |_, default_val|
         value || default_val
       end
+      allow(ENV).to receive(:key?).with(key).and_return(!value.nil?)
     end
 
     def env_stubbed?
@@ -28,6 +29,7 @@ module StubEnv
     def init_stub
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:key?).and_call_original
       add_stubbed_value(STUBBED_KEY, true)
     end
   end
